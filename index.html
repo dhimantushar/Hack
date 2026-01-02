@@ -1,122 +1,327 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="UTF-8">
-<title>Remote Access Terminal</title>
-<style>
-* { margin: 0; padding: 0; box-sizing: border-box; }
-body {
-    background: black;
-    color: #00ff00;
-    font-family: monospace;
-    overflow: hidden;
-}
-canvas {
-    position: fixed;
-    top: 0; left: 0;
-    z-index: 0;
-}
-#terminal {
-    position: relative;
-    z-index: 1;
-    padding: 20px;
-    font-size: 14px;
-    height: 100vh;
-    overflow-y: auto;
-    white-space: pre-wrap;
-}
-.cursor {
-    animation: blink 1s infinite;
-}
-@keyframes blink {
-    50% { opacity: 0; }
-}
-.reveal {
-    color: #00ff00;
-    font-size: 28px;
-    text-align: center;
-    margin-top: 40px;
-}
-</style>
+  <meta charset="UTF-8">
+  <title>system</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box
+    }
+
+    html,
+    body {
+      background: #000;
+      color: #0f0;
+      font-family: monospace;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    canvas {
+      position: fixed;
+      inset: 0;
+      z-index: 0
+    }
+
+    #terminal {
+      position: relative;
+      z-index: 1;
+      padding: 18px;
+      font-size: 13px;
+      white-space: pre-wrap;
+    }
+
+    .fade {
+      animation: flicker 3s infinite
+    }
+
+    @keyframes flicker {
+
+      0%,
+      97%,
+      100% {
+        opacity: 1
+      }
+
+      98% {
+        opacity: .2
+      }
+    }
+
+    .red {
+      color: #ff2b2b
+    }
+
+    /* WARNING OVERLAY */
+    #warning {
+      position: fixed;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0, 0, 0, .85);
+      color: #ff2b2b;
+      font-size: 22px;
+      z-index: 5;
+      animation: blink .4s infinite;
+    }
+
+    @keyframes blink {
+      50% {
+        opacity: .3
+      }
+    }
+  </style>
 </head>
+
 <body>
 
-<canvas id="matrix"></canvas>
-<div id="terminal"></div><span class="cursor">█</span>
+  <canvas id="matrix"></canvas>
+  <div id="terminal"></div>
+  <div id="warning">⚠ INPUT BLOCKED ⚠<br>DO NOT TOUCH SCREEN</div>
 
-<audio id="typeSound" src="https://assets.mixkit.co/sfx/preview/mixkit-fast-typing-on-a-keyboard-2545.mp3"></audio>
+  <audio id="beep" muted src="https://assets.mixkit.co/sfx/preview/mixkit-glitchy-electronic-voice-2842.mp3"></audio>
 
-<script>
-// MATRIX EFFECT
-const canvas = document.getElementById("matrix");
-const ctx = canvas.getContext("2d");
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
-const letters = "01ABCDEFGHIJKLMNOPQRSTUVWXYZ#$%&@";
-const fontSize = 14;
-const columns = canvas.width / fontSize;
-const drops = Array.from({length: columns}).fill(1);
+  <audio id="amb" loop muted>
+    <source src="https://youtube.com/shorts/Dvt6N_R7pAU?si=qsnLar8LymthzvMA">
+  </audio>
+  <audio id="typeS" muted>
+    <source src="https://youtube.com/shorts/LtkTMlO7iPA?si=sJquI_-ZCR-aOPSF">
+  </audio>
+  <audio id="hit" muted>
+    <source src="https://youtube.com/shorts/Vfpq4j4xoZ0?si=yxuviAepT6_LRl49">
+  </audio>
 
-function drawMatrix() {
-    ctx.fillStyle = "rgba(0, 0, 0, 0.05)";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    ctx.fillStyle = "#0F0";
-    ctx.font = fontSize + "px monospace";
+  <script>
 
-    for (let i = 0; i < drops.length; i++) {
-        const text = letters[Math.floor(Math.random() * letters.length)];
-        ctx.fillText(text, i * fontSize, drops[i] * fontSize);
-        if (drops[i] * fontSize > canvas.height && Math.random() > 0.975)
-            drops[i] = 0;
-        drops[i]++;
+
+
+    // -------- WARNING SYSTEM --------
+    const sideWarnings = [
+      "connection active",
+      "do not interrupt",
+      "monitoring input",
+      "stand by"
+    ];
+
+    const clickWarnings = [
+      "that was not required",
+      "input has been logged",
+      "do not repeat this",
+      "you are interfering"
+    ];
+
+    let sideIndex = 0;
+    let clickIndex = 0;
+    let clickedOnce = false;
+    let sideLoop, clickLoop;
+
+    if (clickIndex === 3) {
+      term.innerHTML += "\nthis session is being recorded\n";
     }
-}
-setInterval(drawMatrix, 33);
 
-// TERMINAL EFFECT
-const terminal = document.getElementById("terminal");
-const sound = document.getElementById("typeSound");
+    // side warning loop (auto)
+    function startSideWarningLoop() {
+      sideLoop = setInterval(() => {
+        warn.innerText = sideWarnings[sideIndex % sideWarnings.length];
+        warn.style.display = "flex";
+        sideIndex++;
+      }, 1800);
+    }
 
-const lines = [
-"Establishing encrypted connection...",
-"Target IP detected: 192.168.0." + Math.floor(Math.random()*255),
-"Scanning open ports...",
-"Port 443 OPEN",
-"Port 22 OPEN",
-"Bypassing firewall rules...",
-"Injecting shellcode...",
-"Accessing system memory...",
-"Decrypting data blocks...",
-"████████████░░ 85%",
-"██████████████ 100%",
-"",
-"⚠ SYSTEM BREACH SUCCESSFUL ⚠",
-"",
-"Uploading final payload...",
-"",
-"😂 WAIT...",
-"",
-"RELAX 😄",
-"",
-"🎉🎉 HAPPY NEW YEAR 🎉🎉",
-"",
-"Your device is 100% SAFE",
-"May your year be bug-free & successful 💻✨"
+    // click warning loop (after first click)
+    function startClickWarningLoop() {
+      clickLoop = setInterval(() => {
+        warn.innerText = clickWarnings[clickIndex % clickWarnings.length];
+        warn.style.display = "flex";
+        vibrate();
+        clickIndex++;
+      }, 1600);
+    }
+
+    // START SIDE LOOP IMMEDIATELY
+    startSideWarningLoop();
+
+    // LISTEN FOR FIRST CLICK ONLY
+    window.addEventListener("click", () => {
+      if (clickedOnce) return;
+
+      clickedOnce = true;
+
+      // FULLSCREEN — must be inside click
+      document.documentElement.requestFullscreen().catch(() => { });
+
+      clearInterval(sideLoop);
+      startClickWarningLoop();
+    });
+
+
+    // ---------- MATRIX ----------
+    const c = document.getElementById("matrix"), x = c.getContext("2d");
+    c.width = innerWidth; c.height = innerHeight;
+    const chars = "01ABCDEFGHIJKLMNOPQRSTUVWXYZ#$%&@", fs = 14, cols = c.width / fs;
+    const drops = Array.from({ length: cols }).fill(1);
+    setInterval(() => {
+      x.fillStyle = "rgba(0,0,0,0.05)";
+      x.fillRect(0, 0, c.width, c.height);
+      x.fillStyle = "#0f0";
+      x.font = fs + "px monospace";
+      for (let i = 0; i < drops.length; i++) {
+        const t = chars[Math.floor(Math.random() * chars.length)];
+        x.fillText(t, i * fs, drops[i] * fs);
+        if (drops[i] * fs > c.height && Math.random() > 0.975) drops[i] = 0;
+        drops[i]++;
+      }
+    }, 33);
+
+    const warnings = [
+      "⚠ INPUT BLOCKED ⚠",
+      "DO NOT TOUCH THE SCREEN",
+      "USER INTERFERENCE DETECTED",
+      "CONTROL OVERRIDE FAILED",
+      "STOP MOVING",
+      "SESSION DESTABILIZING",
+      "INPUT MAKES IT WORSE",
+      "LAST WARNING",
+      "DO NOT TRY TO EXIT"
+    ];
+    let wIndex = 0;
+
+
+    // ---------- TERMINAL ----------
+    const term = document.getElementById("terminal");
+    const warn = document.getElementById("warning");
+    const lines = [
+      "initializing node …",
+      "secure handshake complete",
+      "fingerprint matched",
+      "memory access granted",
+      "remote session active",
+      "",
+      "⚠ SYSTEM CONTROL ACQUIRED ⚠"
+    ];
+    let i = 0;
+
+    function vibrate() {
+      if (navigator.vibrate) navigator.vibrate([200, 120, 300]);
+    }
+
+    function type() {
+      if (i < lines.length) {
+        term.innerHTML += lines[i] + "\n";
+        document.getElementById("typeS").currentTime = 0;
+        document.getElementById("typeS").play();
+        vibrate();
+        i++;
+        setTimeout(type, 700 + Math.random() * 700);
+      } else {
+        setTimeout(() => {
+          document.getElementById("hit").play();
+          term.innerHTML += "\n<span class='red'>do not exit</span>";
+        }, 2000);
+      }
+    }
+    term.classList.add("fade");
+    type();
+
+    // ---------- AUDIO UNLOCK ----------
+    let unlocked = false;
+    function unlockAudio() {
+      if (unlocked) return;
+      unlocked = true;
+      document.documentElement.requestFullscreen().catch(() => { });
+      document.querySelectorAll("audio").forEach(a => {
+        a.muted = false;
+        a.volume = 0.7;
+        a.play().catch(() => { });
+      });
+    }
+    ["click", "touchstart", "keydown", "wheel"].forEach(e => {
+      window.addEventListener(e, unlockAudio, { once: true });
+    });
+
+    // ---------- TAP WARNING ----------
+    function showWarning() {
+      warn.innerHTML = warnings[wIndex % warnings.length];
+      wIndex++;
+
+      warn.style.display = "flex";
+      vibrate();
+
+      // thoda random duration — zyada creepy feel
+      const hideDelay = 500 + Math.random() * 600;
+      setTimeout(() => warn.style.display = "none", hideDelay);
+    }
+
+
+    ["click", "touchstart"].forEach(e => {
+      window.addEventListener(e, showWarning);
+    });
+
+    // -------- BACKGROUND TERMINAL ACTIVITY --------
+const bgLogs = [
+  "sync :: node_7a9f",
+  "cache refresh complete",
+  "watchdog heartbeat ok",
+  "thread resumed [id:3]",
+  "checksum verified",
+  "io buffer flushed",
+  "permission map updated",
+  "scheduler tick",
+  "entropy pool stirred",
+  "background task alive",
+  "shadow process running",
+  "hook active :: silent"
 ];
 
-let i = 0;
-function typeLine() {
-    if (i < lines.length) {
-        terminal.innerHTML += lines[i] + "\n";
-        terminal.scrollTop = terminal.scrollHeight;
-        sound.currentTime = 0;
-        sound.play();
-        i++;
-        setTimeout(typeLine, 600);
-    }
+function randomHash(len=6){
+  return Math.random().toString(16).slice(2, 2+len);
 }
-typeLine();
-</script>
+
+function backgroundLog(){
+  const log =
+    "[" + new Date().toLocaleTimeString() + "] " +
+    bgLogs[Math.floor(Math.random()*bgLogs.length)] +
+    " :: " + randomHash();
+
+  term.innerHTML += log + "\n";
+  term.scrollTop = term.scrollHeight;
+
+  // random delay (realistic feel)
+  const next = 600 + Math.random()*1800;
+  setTimeout(backgroundLog, next);
+}
+
+// START BACKGROUND ACTIVITY
+setTimeout(backgroundLog, 2000);
+
+function freezeIllusion(){
+  // stop visuals
+  clearInterval(matrixInterval); // agar matrix interval variable hai
+  term.innerHTML += "\n\nstill processing…\n";
+
+  // block all interaction
+  blocker.style.display = "block";
+
+  // stop sounds
+  document.querySelectorAll("audio").forEach(a=>{
+    a.pause();
+  });
+
+  // random vibration
+  setInterval(()=>{
+    if(navigator.vibrate){
+      navigator.vibrate([200,100,200]);
+    }
+  }, 3000 + Math.random()*4000);
+}
+
+
+  </script>
 
 </body>
+
 </html>
