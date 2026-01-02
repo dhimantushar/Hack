@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Remote Access Terminal</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+    background: black;
+    color: #00ff00;
+    font-family: monospace;
+    overflow: hidden;
+}
+canvas {
+    position: fixed;
+    top: 0; left: 0;
+    z-index: 0;
+}
+#terminal {
+    position: relative;
+    z-index: 1;
+    padding: 20px;
+    font-size: 14px;
+    height: 100vh;
+    overflow-y: auto;
+    white-space: pre-wrap;
+}
+.cursor {
+    animation: blink 1s infinite;
+}
+@keyframes blink {
+    50% { opacity: 0; }
+}
+.reveal {
+    color: #00ff00;
+    font-size: 28px;
+    text-align: center;
+    margin-top: 40px;
+}
+</style>
+</head>
+<body>
+
+<canvas id="matrix"></canvas>
+<div id="terminal"></div><span class="cursor">█</span>
+
+<audio id="typeSound" src="https://assets.mixkit.co/sfx/preview/mixkit-fast-typing-on-a-keyboard-2545.mp3"></audio>
+
+<script>
+// MATRIX EFFECT
+const canvas = document.getElementById("matrix");
+const ctx = canvas.getContext("2d");
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+const letters = "01ABCDEFGHIJKLMNOPQRSTUVWXYZ#$%&@";
+const fontSize = 14;
+const columns = canvas.width / fontSize;
+const drops = Array.from({length: columns}).fill(1);
+
+function drawMatrix() {
+    ctx.fillStyle = "rgba(0, 0, 0, 0.05)";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = "#0F0";
+    ctx.font = fontSize + "px monospace";
+
+    for (let i = 0; i < drops.length; i++) {
+        const text = letters[Math.floor(Math.random() * letters.length)];
+        ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+        if (drops[i] * fontSize > canvas.height && Math.random() > 0.975)
+            drops[i] = 0;
+        drops[i]++;
+    }
+}
+setInterval(drawMatrix, 33);
+
+// TERMINAL EFFECT
+const terminal = document.getElementById("terminal");
+const sound = document.getElementById("typeSound");
+
+const lines = [
+"Establishing encrypted connection...",
+"Target IP detected: 192.168.0." + Math.floor(Math.random()*255),
+"Scanning open ports...",
+"Port 443 OPEN",
+"Port 22 OPEN",
+"Bypassing firewall rules...",
+"Injecting shellcode...",
+"Accessing system memory...",
+"Decrypting data blocks...",
+"████████████░░ 85%",
+"██████████████ 100%",
+"",
+"⚠ SYSTEM BREACH SUCCESSFUL ⚠",
+"",
+"Uploading final payload...",
+"",
+"😂 WAIT...",
+"",
+"RELAX 😄",
+"",
+"🎉🎉 HAPPY NEW YEAR 🎉🎉",
+"",
+"Your device is 100% SAFE",
+"May your year be bug-free & successful 💻✨"
+];
+
+let i = 0;
+function typeLine() {
+    if (i < lines.length) {
+        terminal.innerHTML += lines[i] + "\n";
+        terminal.scrollTop = terminal.scrollHeight;
+        sound.currentTime = 0;
+        sound.play();
+        i++;
+        setTimeout(typeLine, 600);
+    }
+}
+typeLine();
+</script>
+
+</body>
+</html>
